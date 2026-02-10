@@ -3,9 +3,1496 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQLite | </title>
-</head>
-<body>
+    <title>SQLite: Comprehensive Analysis | Technical Deep Dive</title>
     
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body data-bs-spy="scroll" data-bs-target="#navbar-toc" data-bs-offset="80">
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-database-fill"></i> SQLite Deep Dive
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#architecture">Architecture</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#transactions">Transactions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#storage">Storage</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#performance">Performance</a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm ms-2" id="darkModeToggle">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="home" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h1 class="display-3 fw-bold mb-4">SQLite: Comprehensive Analysis</h1>
+                    <p class="lead mb-4">Exploring the Architecture and Operations of the World's Most Deployed Database Engine</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="#architecture" class="btn btn-primary btn-lg">
+                            <i class="bi bi-book"></i> Read Analysis
+                        </a>
+                        <a href="#references" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-link-45deg"></i> References
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Executive Summary -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-5">
+                            <h2 class="card-title mb-4">
+                                <i class="bi bi-info-circle text-primary"></i> Executive Summary
+                            </h2>
+                            <p class="lead">
+                                SQLite is a self-contained, serverless, zero-configuration SQL database engine that has become the most widely deployed database in the world. Unlike traditional client-server databases, SQLite operates as an embedded library within applications, storing entire databases in single cross-platform files.
+                            </p>
+                            <hr class="my-4">
+                            <div class="row g-4 mt-3">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <i class="bi bi-server display-4 text-primary"></i>
+                                        <h5 class="mt-3">Serverless</h5>
+                                        <p class="text-muted">Runs within application process</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <i class="bi bi-file-earmark-binary display-4 text-success"></i>
+                                        <h5 class="mt-3">Single File</h5>
+                                        <p class="text-muted">Entire database in one file</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <i class="bi bi-shield-check display-4 text-info"></i>
+                                        <h5 class="mt-3">ACID Compliant</h5>
+                                        <p class="text-muted">Full transaction support</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content with TOC -->
+    <div class="container-fluid my-5">
+        <div class="row">
+            <!-- Table of Contents Sidebar -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="sticky-toc">
+                    <nav id="navbar-toc" class="navbar flex-column align-items-stretch p-3">
+                        <h5 class="mb-3">Contents</h5>
+                        <nav class="nav nav-pills flex-column">
+                            <a class="nav-link" href="#architecture">Architecture</a>
+                            <nav class="nav nav-pills flex-column ps-3">
+                                <a class="nav-link" href="#arch-overview">Overview</a>
+                                <a class="nav-link" href="#arch-principles">Design Principles</a>
+                            </nav>
+                            <a class="nav-link" href="#sql-processing">SQL Processing</a>
+                            <nav class="nav nav-pills flex-column ps-3">
+                                <a class="nav-link" href="#tokenization">Tokenization</a>
+                                <a class="nav-link" href="#query-planning">Query Planning</a>
+                                <a class="nav-link" href="#vdbe">VDBE Bytecode</a>
+                            </nav>
+                            <a class="nav-link" href="#storage">Storage Architecture</a>
+                            <nav class="nav nav-pills flex-column ps-3">
+                                <a class="nav-link" href="#btree">B-tree Organization</a>
+                                <a class="nav-link" href="#pager">Pager Module</a>
+                                <a class="nav-link" href="#vfs">Virtual File System</a>
+                            </nav>
+                            <a class="nav-link" href="#transactions">Transaction Management</a>
+                            <nav class="nav nav-pills flex-column ps-3">
+                                <a class="nav-link" href="#locking">Locking States</a>
+                                <a class="nav-link" href="#rollback-journal">Rollback Journal</a>
+                                <a class="nav-link" href="#wal">Write-Ahead Log</a>
+                            </nav>
+                            <a class="nav-link" href="#advanced">Advanced Features</a>
+                            <a class="nav-link" href="#performance">Performance</a>
+                            <a class="nav-link" href="#testing">Testing & Reliability</a>
+                            <a class="nav-link" href="#use-cases">Use Cases</a>
+                            <a class="nav-link" href="#comparison">Comparisons</a>
+                            <a class="nav-link" href="#conclusion">Conclusion</a>
+                        </nav>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-lg-9">
+                <div class="content-area">
+                    
+                    <!-- Architecture Section -->
+                    <section id="architecture" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-diagram-3"></i> 1. Core Architectural Overview
+                        </h2>
+                        
+                        <div id="arch-overview" class="subsection">
+                            <h3>1.1 High-Level Architecture</h3>
+                            <p>SQLite's architecture consists of two major subsystems:</p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-primary">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0"><i class="bi bi-cpu"></i> Frontend (SQL Compiler)</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-unstyled">
+                                                <li><i class="bi bi-chevron-right text-primary"></i> Interface (C API)</li>
+                                                <li><i class="bi bi-chevron-right text-primary"></i> Tokenizer</li>
+                                                <li><i class="bi bi-chevron-right text-primary"></i> Parser</li>
+                                                <li><i class="bi bi-chevron-right text-primary"></i> Code Generator</li>
+                                                <li><i class="bi bi-chevron-right text-primary"></i> Query Planner/Optimizer</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-success">
+                                        <div class="card-header bg-success text-white">
+                                            <h5 class="mb-0"><i class="bi bi-hdd"></i> Backend (Storage Engine)</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-unstyled">
+                                                <li><i class="bi bi-chevron-right text-success"></i> Virtual Database Engine (VDBE)</li>
+                                                <li><i class="bi bi-chevron-right text-success"></i> B-tree Module</li>
+                                                <li><i class="bi bi-chevron-right text-success"></i> Pager</li>
+                                                <li><i class="bi bi-chevron-right text-success"></i> Operating System Interface (VFS)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="arch-principles" class="subsection mt-5">
+                            <h3>1.2 Fundamental Design Principles</h3>
+                            
+                            <div class="accordion" id="principlesAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#serverless">
+                                            <i class="bi bi-server me-2"></i> Serverless Architecture
+                                        </button>
+                                    </h2>
+                                    <div id="serverless" class="accordion-collapse collapse show" data-bs-parent="#principlesAccordion">
+                                        <div class="accordion-body">
+                                            <p>SQLite runs entirely within the application process, eliminating network latency and inter-process communication overhead. Applications interact directly with database files through library function calls.</p>
+                                            <div class="alert alert-info">
+                                                <strong>Key Benefit:</strong> No network or IPC overhead means faster operations and simpler deployment.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#singlefile">
+                                            <i class="bi bi-file-earmark me-2"></i> Single-File Database
+                                        </button>
+                                    </h2>
+                                    <div id="singlefile" class="accordion-collapse collapse" data-bs-parent="#principlesAccordion">
+                                        <div class="accordion-body">
+                                            <p>Each database consists of a single ordinary disk file that is cross-platform compatible. This simplifies backup, transfer, and version control.</p>
+                                            <ul>
+                                                <li>Easy to backup (just copy the file)</li>
+                                                <li>Cross-platform compatible</li>
+                                                <li>Version control friendly</li>
+                                                <li>Simple to deploy and distribute</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#zeroconfig">
+                                            <i class="bi bi-gear me-2"></i> Zero Configuration
+                                        </button>
+                                    </h2>
+                                    <div id="zeroconfig" class="accordion-collapse collapse" data-bs-parent="#principlesAccordion">
+                                        <div class="accordion-body">
+                                            <p>No installation, setup, or administration required. No server processes to start, stop, or configure.</p>
+                                            <div class="alert alert-success">
+                                                <strong>Developer Friendly:</strong> Drop in the library and start using it immediately.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#acid">
+                                            <i class="bi bi-shield-check me-2"></i> ACID Compliance
+                                        </button>
+                                    </h2>
+                                    <div id="acid" class="accordion-collapse collapse" data-bs-parent="#principlesAccordion">
+                                        <div class="accordion-body">
+                                            <p>Full support for Atomic, Consistent, Isolated, and Durable transactions through sophisticated locking and journaling mechanisms.</p>
+                                            <table class="table table-sm mt-3">
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>Atomic:</strong></td>
+                                                        <td>All or nothing transaction execution</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Consistent:</strong></td>
+                                                        <td>Database remains in valid state</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Isolated:</strong></td>
+                                                        <td>Concurrent transactions don't interfere</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Durable:</strong></td>
+                                                        <td>Committed changes persist after crashes</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- SQL Processing Section -->
+                    <section id="sql-processing" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-code-slash"></i> 2. SQL Processing Pipeline
+                        </h2>
+
+                        <div id="tokenization" class="subsection">
+                            <h3>2.1 Tokenization and Parsing</h3>
+                            
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-scissors"></i> Tokenizer (tokenize.c)</h5>
+                                    <ul>
+                                        <li>Breaks SQL text into tokens (keywords, identifiers, literals, operators)</li>
+                                        <li>Written in C, hand-coded for performance</li>
+                                        <li>Unlike traditional compilers, the tokenizer calls the parser (not vice versa)</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-diagram-2"></i> Parser</h5>
+                                    <p>Generated by Lemon LALR(1) parser generator (not YACC/BISON)</p>
+                                    <ul>
+                                        <li>Input grammar defined in <code>parse.y</code></li>
+                                        <li>Assembles tokens into a parse tree</li>
+                                    </ul>
+                                    
+                                    <div class="alert alert-warning mt-3">
+                                        <h6><i class="bi bi-star"></i> Lemon Advantages:</h6>
+                                        <ul class="mb-0">
+                                            <li>Reentrant and thread-safe</li>
+                                            <li>Non-terminal destructors prevent memory leaks on syntax errors</li>
+                                            <li>Less error-prone input syntax</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="query-planning" class="subsection mt-5">
+                            <h3>2.2 Query Planning and Code Generation</h3>
+                            
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0">Query Planner/Optimizer</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>Analyzes parse tree to determine optimal execution strategy. Evaluates different query plans based on:</p>
+                                            <ul>
+                                                <li>Available indexes</li>
+                                                <li>Table statistics</li>
+                                                <li>Join order optimization</li>
+                                                <li>WHERE clause selectivity</li>
+                                            </ul>
+                                            <p class="mb-0"><strong>Goal:</strong> Select lowest-cost execution plan</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-success text-white">
+                                            <h5 class="mb-0">Code Generator</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>Distributed across multiple files:</p>
+                                            <ul>
+                                                <li><code>build.c</code> - Schema building</li>
+                                                <li><code>select.c</code> - SELECT statements</li>
+                                                <li><code>insert.c</code> - INSERT operations</li>
+                                                <li><code>delete.c</code> - DELETE operations</li>
+                                                <li><code>update.c</code> - UPDATE operations</li>
+                                                <li><code>where*.c</code> - WHERE clause optimization</li>
+                                                <li><code>expr.c</code> - Expression compilation</li>
+                                            </ul>
+                                            <p class="mb-0"><strong>Output:</strong> VDBE bytecode</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="vdbe" class="subsection mt-5">
+                            <h3>2.3 Bytecode and VDBE</h3>
+                            
+                            <div class="card border-primary mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-file-binary"></i> Bytecode Program Structure</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Also known as "prepared statement". Each instruction consists of:</p>
+                                    <ul>
+                                        <li><strong>Opcode:</strong> Operation type</li>
+                                        <li><strong>P1-P5:</strong> Up to 5 parameters</li>
+                                        <li><strong>Comment:</strong> Optional (when compiled with debug flags)</li>
+                                    </ul>
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i> Currently ~190 opcodes in recent versions
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="bi bi-cpu"></i> Virtual Database Engine (VDBE)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Custom virtual machine executing bytecode. Historically called "Virtual DataBase Engine".</p>
+                                    
+                                    <h6 class="mt-3">Architecture:</h6>
+                                    <ul>
+                                        <li>Register-based (modern versions; older versions were stack-based)</li>
+                                        <li>Finite but large register bank</li>
+                                    </ul>
+
+                                    <h6 class="mt-3">Execution Flow:</h6>
+                                    <ol>
+                                        <li>Starts at instruction 0</li>
+                                        <li>Executes sequentially unless control flow changes</li>
+                                        <li>Continues until: Halt instruction, fatal error, or program end</li>
+                                        <li>Automatic cleanup of cursors, memory, and resources</li>
+                                    </ol>
+
+                                    <div class="card bg-light mt-3">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-lightbulb"></i> EXPLAIN Keyword</h6>
+                                            <p>Prefixing SQL with <code>EXPLAIN</code> returns bytecode instead of executing:</p>
+                                            <ul class="mb-0">
+                                                <li>Each row represents one instruction</li>
+                                                <li>Output columns: addr, opcode, p1, p2, p3, p4, p5, comment</li>
+                                                <li>Useful for debugging and understanding execution plans</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Storage Architecture Section -->
+                    <section id="storage" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-hdd-stack"></i> 3. Storage Architecture
+                        </h2>
+
+                        <div id="btree" class="subsection">
+                            <h3>3.1 B-tree Organization</h3>
+                            
+                            <div class="alert alert-primary">
+                                <h5><i class="bi bi-diagram-3"></i> Core Characteristics</h5>
+                                <ul class="mb-0">
+                                    <li>Based on Donald Knuth's B-tree algorithm with database-specific optimizations</li>
+                                    <li>Each table and index stored as separate B-tree</li>
+                                    <li>All B-trees share the same database file</li>
+                                    <li>B+tree-like organization with interior and leaf pages</li>
+                                </ul>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-info">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">Interior Pages</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="mb-0">
+                                                <li>Store keys/ranges</li>
+                                                <li>Pointers to child pages</li>
+                                                <li>Guide search operations</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-warning">
+                                        <div class="card-header bg-warning">
+                                            <h6 class="mb-0">Leaf Pages</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="mb-0">
+                                                <li>Contain actual row data (payloads)</li>
+                                                <li>Variable-length records</li>
+                                                <li>Overflow pages for large data</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="bi bi-file-earmark-code"></i> Page-Based Storage</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Default Page Size:</strong></td>
+                                                <td>4096 bytes</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Configurable Range:</strong></td>
+                                                <td>512 to 65536 bytes (power of 2)</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Organization:</strong></td>
+                                                <td>Database divided into fixed-size pages</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Compatibility:</strong></td>
+                                                <td>Cross-platform, stable format</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="pager" class="subsection mt-5">
+                            <h3>3.2 Pager Module</h3>
+                            
+                            <p class="lead">The pager is the critical subsystem ensuring data integrity and ACID properties.</p>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-primary">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-arrow-repeat text-primary"></i> Transaction Manager</h6>
+                                            <ul class="small">
+                                                <li>Implements atomic commit and rollback</li>
+                                                <li>Manages transaction lifecycle</li>
+                                                <li>Ensures ACID properties</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-success">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-database text-success"></i> Data Manager</h6>
+                                            <ul class="small">
+                                                <li>Coordinates page reads/writes</li>
+                                                <li>Manages page cache (memory buffer)</li>
+                                                <li>Handles file space management</li>
+                                                <li>Read-through, lazy-write cache</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-info">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-journal-text text-info"></i> Log Manager</h6>
+                                            <ul class="small">
+                                                <li>Controls journal file writing</li>
+                                                <li>Determines log record timing</li>
+                                                <li>Supports multiple journaling modes</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-warning">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-lock text-warning"></i> Lock Manager</h6>
+                                            <ul class="small">
+                                                <li>Ensures appropriate file locks</li>
+                                                <li>Five-state locking protocol</li>
+                                                <li>Prevents conflicting access</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-success mt-4">
+                                <h6><i class="bi bi-check-circle"></i> Key Design Points:</h6>
+                                <ul class="mb-0">
+                                    <li>Completely insulates upper layers from low-level lock/log mechanisms</li>
+                                    <li>B-tree module sees everything as transactions</li>
+                                    <li>Never directly accesses database files; always through OS interface</li>
+                                    <li>Treats database as logical array of uniform-size pages</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="vfs" class="subsection mt-5">
+                            <h3>3.3 Virtual File System (VFS)</h3>
+                            
+                            <div class="card">
+                                <div class="card-body">
+                                    <p><strong>Purpose:</strong> Abstract OS-specific file operations for portability</p>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-md-4">
+                                            <h6>Implementations:</h6>
+                                            <ul>
+                                                <li><code>os_unix.c</code> for POSIX systems</li>
+                                                <li><code>os_win.c</code> for Windows</li>
+                                                <li>Custom VFS for exotic platforms</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <h6>Operations Abstracted:</h6>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <ul>
+                                                        <li>File open/close</li>
+                                                        <li>Read/write operations</li>
+                                                        <li>File locking</li>
+                                                    </ul>
+                                                </div>
+                                                <div class="col-6">
+                                                    <ul>
+                                                        <li>Disk cache flushing</li>
+                                                        <li>File deletion</li>
+                                                        <li>Platform-specific optimizations</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Transactions Section -->
+                    <section id="transactions" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-arrow-repeat"></i> 4. Transaction Management and Concurrency
+                        </h2>
+
+                        <div id="locking" class="subsection">
+                            <h3>4.1 Locking States</h3>
+                            <p>SQLite implements a five-state locking protocol:</p>
+                            
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><span class="badge bg-secondary">1</span> UNLOCKED</h6>
+                                    </div>
+                                    <p class="mb-1">No locks held, no database access</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><span class="badge bg-primary">2</span> SHARED</h6>
+                                    </div>
+                                    <p class="mb-1">Read lock, multiple processes can hold simultaneously, allows reading</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><span class="badge bg-info">3</span> RESERVED</h6>
+                                    </div>
+                                    <p class="mb-1">Intention to write, acquired before modifying data, blocks other RESERVED/PENDING/EXCLUSIVE locks</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><span class="badge bg-warning">4</span> PENDING</h6>
+                                    </div>
+                                    <p class="mb-1">Waiting for SHARED locks to clear, prevents new SHARED locks, stepping stone to EXCLUSIVE</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><span class="badge bg-danger">5</span> EXCLUSIVE</h6>
+                                    </div>
+                                    <p class="mb-1">Exclusive write access, no other locks can coexist, held during actual write operations</p>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-warning mt-4">
+                                <h6><i class="bi bi-shield-exclamation"></i> Writer Starvation Prevention:</h6>
+                                <ul class="mb-0">
+                                    <li>PENDING lock allows existing readers to finish</li>
+                                    <li>Prevents new readers from connecting</li>
+                                    <li>Once SHARED locks clear, writer obtains EXCLUSIVE lock</li>
+                                    <li>Minimizes EXCLUSIVE lock duration for better concurrency</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="rollback-journal" class="subsection mt-5">
+                            <h3>4.2 Rollback Journal Mode</h3>
+                            
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Traditional Transaction Process</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6><i class="bi bi-1-circle"></i> Before Write:</h6>
+                                            <ul>
+                                                <li>Acquire RESERVED lock</li>
+                                                <li>Create rollback journal</li>
+                                                <li>Initialize journal header with original database size</li>
+                                            </ul>
+
+                                            <h6 class="mt-3"><i class="bi bi-2-circle"></i> During Transaction:</h6>
+                                            <ul>
+                                                <li>Write original page contents to journal before modification</li>
+                                                <li>Modified pages kept in memory cache</li>
+                                                <li>Database file remains unchanged</li>
+                                                <li>Other processes can continue reading</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6><i class="bi bi-3-circle"></i> Commit:</h6>
+                                            <ul>
+                                                <li>Flush modified pages to database file</li>
+                                                <li>Sync database to disk</li>
+                                                <li>Delete or truncate journal</li>
+                                                <li>Release locks</li>
+                                            </ul>
+
+                                            <h6 class="mt-3"><i class="bi bi-4-circle"></i> Rollback:</h6>
+                                            <ul>
+                                                <li>Copy original pages from journal back to database</li>
+                                                <li>Restore database to pre-transaction state</li>
+                                                <li>Truncate journal</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="bi bi-gear"></i> Journal Modes</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Mode</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><code>DELETE</code></td>
+                                                <td>Journal deleted after commit (default)</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>TRUNCATE</code></td>
+                                                <td>Journal truncated to zero length</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>PERSIST</code></td>
+                                                <td>Journal header zeroed but file persists</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>MEMORY</code></td>
+                                                <td>Journal kept in memory only</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>OFF</code></td>
+                                                <td>No journal (dangerous, no rollback capability)</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="wal" class="subsection mt-5">
+                            <h3>4.3 Write-Ahead Log (WAL) Mode</h3>
+                            
+                            <div class="alert alert-info">
+                                <h5><i class="bi bi-info-circle"></i> Introduced in SQLite 3.7.0</h5>
+                                <p class="mb-0">Designed for improved concurrency and performance</p>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-lg-6">
+                                    <div class="card h-100 border-success">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0"><i class="bi bi-check-circle"></i> Advantages</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li><strong>Readers don't block writers</strong></li>
+                                                <li><strong>Writers don't block readers</strong></li>
+                                                <li>Better concurrency than rollback journal</li>
+                                                <li>Faster in many scenarios (fewer disk syncs)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="card h-100 border-warning">
+                                        <div class="card-header bg-warning">
+                                            <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Limitations</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>Database must be on local filesystem</li>
+                                                <li>All processes must use same WAL mode</li>
+                                                <li>WAL file grows until checkpointed</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="bi bi-arrow-repeat"></i> How WAL Works</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ol>
+                                        <li><strong>Original content</strong> stays in database file</li>
+                                        <li><strong>Changes appended</strong> to separate WAL file</li>
+                                        <li><strong>COMMIT</strong> becomes special record in WAL</li>
+                                        <li><strong>Multiple transactions</strong> can accumulate in WAL</li>
+                                    </ol>
+
+                                    <div class="alert alert-primary mt-3">
+                                        <h6>Checkpointing:</h6>
+                                        <p>Periodic process copying WAL content back to main database</p>
+                                        <ul class="mb-0">
+                                            <li>Truncates WAL after successful checkpoint</li>
+                                            <li>Can occur automatically or manually</li>
+                                            <li>Must occur when all readers are finished with old data</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Advanced Features Section -->
+                    <section id="advanced" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-rocket"></i> 5. Advanced Features and Optimizations
+                        </h2>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0"><i class="bi bi-memory"></i> Memory Management</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul>
+                                            <li>Sophisticated subsystem customizable for application needs</li>
+                                            <li>Configurable memory limits</li>
+                                            <li>Robust against out-of-memory conditions</li>
+                                            <li>Leak-free design</li>
+                                            <li>Can use custom allocators</li>
+                                        </ul>
+                                        <div class="alert alert-info mt-3 mb-0">
+                                            <small><strong>Page Cache:</strong> Configurable cache size (PRAGMA cache_size), LRU-based eviction</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="bi bi-diagram-2"></i> Manifest Typing</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Type associated with value itself, not column. Dynamic typing system.</p>
+                                        
+                                        <h6>Storage Classes:</h6>
+                                        <ul>
+                                            <li><code>NULL</code></li>
+                                            <li><code>INTEGER</code> (1, 2, 3, 4, 6, or 8 bytes)</li>
+                                            <li><code>REAL</code> (8-byte IEEE floating point)</li>
+                                            <li><code>TEXT</code> (UTF-8, UTF-16BE, UTF-16LE)</li>
+                                            <li><code>BLOB</code> (binary data)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0"><i class="bi bi-list-ol"></i> Indexes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6>Types:</h6>
+                                        <ul>
+                                            <li>Regular indexes on columns</li>
+                                            <li>Expression indexes (on computed values)</li>
+                                            <li>Partial indexes (subset with WHERE clause)</li>
+                                            <li>Unique indexes</li>
+                                        </ul>
+                                        
+                                        <div class="alert alert-secondary mt-3 mb-0">
+                                            <small><strong>Implementation:</strong> Each index is separate B-tree with automatic maintenance</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-warning">
+                                        <h5 class="mb-0"><i class="bi bi-table"></i> WITHOUT ROWID Tables</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Optimization for:</strong> Tables with explicit, non-INTEGER PRIMARY KEY</p>
+                                        
+                                        <h6>Benefits:</h6>
+                                        <ul>
+                                            <li>Smaller database files</li>
+                                            <li>Faster queries by PRIMARY KEY</li>
+                                            <li>Eliminates redundant rowid storage</li>
+                                            <li>Data stored in index order by PRIMARY KEY</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-4">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0"><i class="bi bi-puzzle"></i> Extensions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Built-in Extension Support:</h6>
+                                        <ul>
+                                            <li>Full-Text Search (FTS3, FTS5)</li>
+                                            <li>R-Tree (spatial indexing)</li>
+                                            <li>JSON functions</li>
+                                            <li>Sessions (change tracking)</li>
+                                            <li>Virtual tables (custom data sources)</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Run-time Loadable Extensions:</h6>
+                                        <ul>
+                                            <li>Dynamic loading of custom functionality</li>
+                                            <li>C/C++ interface for extension development</li>
+                                            <li>Common extensions: CSV reader, Zipfile, Spellfix1</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Performance Section -->
+                    <section id="performance" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-speedometer2"></i> 6. Performance Characteristics
+                        </h2>
+
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Strengths</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6>Embedded Use Cases:</h6>
+                                        <ul>
+                                            <li>No network overhead</li>
+                                            <li>No IPC serialization costs</li>
+                                            <li>Extremely low latency for single-process access</li>
+                                            <li>Efficient for read-heavy workloads</li>
+                                        </ul>
+
+                                        <h6 class="mt-3">Resource Efficiency:</h6>
+                                        <ul>
+                                            <li>Small footprint (~324KB with all features)</li>
+                                            <li>Minimal memory requirements</li>
+                                            <li>Single file simplifies deployment</li>
+                                        </ul>
+
+                                        <h6 class="mt-3">Optimization Techniques:</h6>
+                                        <ul>
+                                            <li>Query optimizer with cost-based analysis</li>
+                                            <li>Memory-mapped I/O support</li>
+                                            <li>Bytecode compilation amortizes parsing cost</li>
+                                            <li>Prepared statement reuse</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="card border-danger h-100">
+                                    <div class="card-header bg-danger text-white">
+                                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Limitations</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6>Concurrency:</h6>
+                                        <ul>
+                                            <li>Database-level locking (not row-level)</li>
+                                            <li>Single writer at a time</li>
+                                            <li>Write operations block under certain conditions</li>
+                                            <li>Not ideal for high-concurrency write workloads</li>
+                                        </ul>
+
+                                        <h6 class="mt-3">Scalability:</h6>
+                                        <ul>
+                                            <li>Designed for low to moderate traffic</li>
+                                            <li>Single server, &lt;1M hits/day typically recommended</li>
+                                            <li>Not suitable for distributed systems</li>
+                                            <li>File size practical limit around 281TB</li>
+                                        </ul>
+
+                                        <h6 class="mt-3">Network Access:</h6>
+                                        <ul>
+                                            <li>Not designed for network file systems</li>
+                                            <li>Performance degrades on networked storage</li>
+                                            <li>Locking issues on some NFS implementations</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Testing Section -->
+                    <section id="testing" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-bug"></i> 7. Testing and Reliability
+                        </h2>
+
+                        <div class="alert alert-success">
+                            <h4><i class="bi bi-clipboard-check"></i> Comprehensive Testing Strategy</h4>
+                            <p class="lead">Over 50% of SQLite codebase is test code</p>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-check2-square display-4 text-primary"></i>
+                                        <h5 class="mt-3">TCL-based Tests</h5>
+                                        <p class="text-muted">Comprehensive regression testing</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-memory display-4 text-success"></i>
+                                        <h5 class="mt-3">Memory Leak Detection</h5>
+                                        <p class="text-muted">Valgrind integration</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-lightning display-4 text-warning"></i>
+                                        <h5 class="mt-3">Fuzz Testing</h5>
+                                        <p class="text-muted">Random input generation</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-x-octagon display-4 text-danger"></i>
+                                        <h5 class="mt-3">OOM Testing</h5>
+                                        <p class="text-muted">Out-of-memory scenarios</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-hdd display-4 text-info"></i>
+                                        <h5 class="mt-3">I/O Error Simulation</h5>
+                                        <p class="text-muted">Disk failure handling</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-power display-4 text-secondary"></i>
+                                        <h5 class="mt-3">Crash Testing</h5>
+                                        <p class="text-muted">Power-loss scenarios</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-4 border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="bi bi-shield-check"></i> Reliability Features</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Corruption Resistance:</h6>
+                                        <ul>
+                                            <li>Robust against application bugs</li>
+                                            <li>Handles OS crashes and power failures</li>
+                                            <li>Atomic commit ensures consistency</li>
+                                            <li>Journal recovery on unexpected termination</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Error Handling:</h6>
+                                        <ul>
+                                            <li>Detailed error codes and messages</li>
+                                            <li>Error and warning log facility</li>
+                                            <li>Graceful degradation on resource limits</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Use Cases Section -->
+                    <section id="use-cases" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-lightbulb"></i> 8. Use Cases and Recommendations
+                        </h2>
+
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Ideal Use Cases</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6>Embedded Applications:</h6>
+                                        <ul>
+                                            <li>Mobile apps (iOS, Android)</li>
+                                            <li>Desktop applications</li>
+                                            <li>IoT devices</li>
+                                            <li>Game save files</li>
+                                            <li>Configuration storage</li>
+                                        </ul>
+
+                                        <h6 class="mt-3">Local Storage:</h6>
+                                        <ul>
+                                            <li>User preferences</li>
+                                            <li>Cache data</li>
+                                            <li>Application state</li>
+                                            <li>Offline-first applications</li>
+                                        </ul>
+
+                                        <h6 class="mt-3">Development and Testing:</h6>
+                                        <ul>
+                                            <li>Rapid prototyping</li>
+                                            <li>Unit test databases</li>
+                                            <li>Development environments</li>
+                                            <li>CI/CD pipelines</li>
+                                        </ul>
+
+                                        <h6 class="mt-3">Application File Format:</h6>
+                                        <ul>
+                                            <li>Alternative to XML/JSON files</li>
+                                            <li>Structured data storage</li>
+                                            <li>Versioned data</li>
+                                            <li>Complex queries on application data</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="card border-danger h-100">
+                                    <div class="card-header bg-danger text-white">
+                                        <h5 class="mb-0"><i class="bi bi-x-circle"></i> When NOT to Use SQLite</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6>Inappropriate Scenarios:</h6>
+                                        <ul>
+                                            <li>High-concurrency write workloads</li>
+                                            <li>Large-scale enterprise applications</li>
+                                            <li>Network-accessible databases</li>
+                                            <li>Distributed systems</li>
+                                            <li>Client-server architectures requiring user authentication</li>
+                                            <li>Applications requiring advanced access control</li>
+                                        </ul>
+
+                                        <h6 class="mt-3">Better Alternatives:</h6>
+                                        <div class="card bg-light mt-2">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-database"></i> PostgreSQL</h6>
+                                                <p class="small mb-0">Complex queries, high concurrency, network access</p>
+                                            </div>
+                                        </div>
+                                        <div class="card bg-light mt-2">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-server"></i> MySQL</h6>
+                                                <p class="small mb-0">Web applications, multiple simultaneous writers</p>
+                                            </div>
+                                        </div>
+                                        <div class="card bg-light mt-2">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-box"></i> NoSQL</h6>
+                                                <p class="small mb-0">Document storage, horizontal scaling, eventual consistency</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-primary mt-4">
+                            <h5><i class="bi bi-book"></i> Best Practices</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Transaction Management:</h6>
+                                    <ul>
+                                        <li>Always use transactions for multiple writes</li>
+                                        <li>Batch operations within transactions</li>
+                                        <li>Use WAL mode for better concurrency</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Performance Tuning:</h6>
+                                    <ul>
+                                        <li>Adjust page size for workload</li>
+                                        <li>Configure cache size appropriately</li>
+                                        <li>Use ANALYZE to update statistics</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Comparison Section -->
+                    <section id="comparison" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-bar-chart"></i> 11. Comparison with Other Databases
+                        </h2>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">SQLite vs. MySQL/PostgreSQL</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Feature</th>
+                                                <th class="text-center">SQLite</th>
+                                                <th class="text-center">MySQL/PostgreSQL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Setup & Configuration</td>
+                                                <td class="text-center"><span class="badge bg-success">Zero config</span></td>
+                                                <td class="text-center"><span class="badge bg-warning">Complex setup</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Footprint</td>
+                                                <td class="text-center"><span class="badge bg-success">~324KB</span></td>
+                                                <td class="text-center"><span class="badge bg-warning">Large</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Concurrency</td>
+                                                <td class="text-center"><span class="badge bg-warning">Database-level</span></td>
+                                                <td class="text-center"><span class="badge bg-success">Row-level</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Network Access</td>
+                                                <td class="text-center"><span class="badge bg-danger">No</span></td>
+                                                <td class="text-center"><span class="badge bg-success">Yes</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>User Authentication</td>
+                                                <td class="text-center"><span class="badge bg-danger">No</span></td>
+                                                <td class="text-center"><span class="badge bg-success">Yes</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Simple Queries Speed</td>
+                                                <td class="text-center"><span class="badge bg-success">Faster</span></td>
+                                                <td class="text-center"><span class="badge bg-warning">Slower</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Scalability</td>
+                                                <td class="text-center"><span class="badge bg-warning">Limited</span></td>
+                                                <td class="text-center"><span class="badge bg-success">High</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">SQLite vs. NoSQL Databases</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6><i class="bi bi-database text-primary"></i> SQLite Advantages:</h6>
+                                        <ul>
+                                            <li>ACID guarantees</li>
+                                            <li>SQL query language</li>
+                                            <li>Relationships and joins</li>
+                                            <li>Data integrity constraints</li>
+                                            <li>Mature and stable</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="bi bi-box text-success"></i> NoSQL Advantages:</h6>
+                                        <ul>
+                                            <li>Horizontal scaling</li>
+                                            <li>Schema flexibility</li>
+                                            <li>Distributed architecture</li>
+                                            <li>Specialized for specific use cases</li>
+                                            <li>Document/graph/time-series models</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Conclusion Section -->
+                    <section id="conclusion" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-flag"></i> 14. Conclusion
+                        </h2>
+
+                        <div class="card border-primary">
+                            <div class="card-body p-4">
+                                <p class="lead">
+                                    SQLite represents a masterclass in database engineering, delivering ACID-compliant relational database functionality in a compact, zero-configuration package.
+                                </p>
+
+                                <hr>
+
+                                <h5 class="mt-4"><i class="bi bi-layers"></i> Architectural Excellence</h5>
+                                <p>Its layered architecture elegantly separates concerns:</p>
+                                <ul>
+                                    <li><strong>Frontend</strong> handles SQL parsing and optimization</li>
+                                    <li><strong>VDBE</strong> executes portable bytecode</li>
+                                    <li><strong>B-tree</strong> organizes data efficiently</li>
+                                    <li><strong>Pager</strong> ensures ACID properties</li>
+                                    <li><strong>VFS</strong> abstracts OS differences</li>
+                                </ul>
+
+                                <h5 class="mt-4"><i class="bi bi-trophy"></i> Key Takeaways</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-1-circle text-primary"></i> Most Deployed</h6>
+                                                <p class="small mb-0">Simplicity, reliability, and zero configuration make it ubiquitous</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-2-circle text-primary"></i> Bytecode VM</h6>
+                                                <p class="small mb-0">Provides portability and security</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-3-circle text-primary"></i> Pager Module</h6>
+                                                <p class="small mb-0">Crucial for ACID properties through sophisticated journaling</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-4-circle text-primary"></i> Single-File</h6>
+                                                <p class="small mb-0">Simplifies deployment and backup</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-5-circle text-primary"></i> Trade-offs</h6>
+                                                <p class="small mb-0">Concurrency limitations acceptable for target use cases</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-6-circle text-primary"></i> Testing</h6>
+                                                <p class="small mb-0">Extensive testing ensures exceptional reliability</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-success mt-4 mb-0">
+                                    <h6><i class="bi bi-check-circle"></i> Final Thoughts</h6>
+                                    <p class="mb-0">
+                                        SQLite proves that embedded databases can be powerful, reliable, and elegant—qualities that have made it the world's most widely deployed database engine. Its public domain licensing and continuous evolution while maintaining backward compatibility demonstrate a commitment to both innovation and stability.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- References Section -->
+                    <section id="references" class="content-section">
+                        <h2 class="section-title">
+                            <i class="bi bi-link-45deg"></i> References
+                        </h2>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <ol class="reference-list">
+                                    <li>
+                                        <strong>SQLite Official Documentation</strong><br>
+                                        <a href="https://www.sqlite.org/docs.html" target="_blank" rel="noopener">
+                                            https://www.sqlite.org/docs.html
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <strong>SQLite Architecture Documentation</strong><br>
+                                        <a href="https://sqlite.org/arch.html" target="_blank" rel="noopener">
+                                            https://sqlite.org/arch.html
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <strong>SQLite Opcode Reference</strong><br>
+                                        <a href="https://sqlite.org/opcode.html" target="_blank" rel="noopener">
+                                            https://sqlite.org/opcode.html
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <strong>SQLite Locking and Concurrency</strong><br>
+                                        <a href="https://sqlite.org/lockingv3.html" target="_blank" rel="noopener">
+                                            https://sqlite.org/lockingv3.html
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <strong>SQLite B-tree Module</strong><br>
+                                        <a href="https://sqlite.org/btreemodule.html" target="_blank" rel="noopener">
+                                            https://sqlite.org/btreemodule.html
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <strong>Various technical articles and deep dives from the developer community</strong>
+                                    </li>
+                                </ol>
+
+                                <hr class="my-4">
+
+                                <div class="text-muted">
+                                    <p class="mb-1"><em>Analysis compiled from official SQLite documentation and authoritative technical sources.</em></p>
+                                    <p class="mb-1"><strong>Document Version:</strong> 1.0</p>
+                                    <p class="mb-0"><strong>Last Updated:</strong> February 2026</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="bi bi-database-fill"></i> SQLite Deep Dive</h5>
+                    <p class="text-muted">Comprehensive analysis of SQLite architecture and operations</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-0">
+                        Built with Bootstrap 5<br>
+                        &copy; 2026 Technical Documentation
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="btn btn-primary btn-floating" title="Back to top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/script.js"></script>
 </body>
 </html>
